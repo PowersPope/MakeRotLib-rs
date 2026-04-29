@@ -1,24 +1,17 @@
-# Robust Rotamer Builder
+# MakeRotLib in Rust
 
-A rotamer builder written in Rust for Rosetta which implements the rotamer builder outlined by [Blah et al.]() and also shown in [Rinkler et al.]().
+A rotamer builder written in Rust for Rosetta which copies the MakeRotLib protocol written by P. Doug Renfrew and Andy Watkins.
+This project is for my own edification on Rust and how Rosetta parameterizes & builds conformer libraries.
+My plan is to make a another library after this one that improves upon the current methods available, but will be faster, more memory safe, and a standalone easy to use application.
 
-Plan:
+Plan
 ---
-- Plan out Project Overivew and how to represent the system
-- Build out residue system
-    - Atoms
-    - Bonds
-    - Dihedrals
-- Create search method for generating conformers
-- Apply search method to our residue system
+- Work my way through rewriting all of the MakeRotLib protocol
+- I will need to make an approximation of the Rosetta ScoreFunction as a way to score conformers
 
-Test:
+License
 ---
-- Grab Dunbrack Libraries to compare against
-- Compare against other methods:
-    - Crest
-    - MD
-    - RDKit
+MIT - Feel free to use this for any project where you would like to make a library of param files to use in Rosetta.
 
 ---
 Author: Andrew Powers (apowers4@uoregon.edu)
