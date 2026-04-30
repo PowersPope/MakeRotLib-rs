@@ -7,13 +7,14 @@ use std::fs::OpenOptions;
 use std::io::BufReader;
 use std::io::prelude::*;
 
+//// STRUCTS AND ENUM SETUP 
 
 #[derive(Debug)]
 /// Options that will be used to run
 /// MakeRotLib, though this struct
 /// needs to be loaded up with parameters
 /// from a passed in file first
-pub struct MakeRotlibOptions {
+pub struct MakeRotLibOptions {
     n_bb_: u32,
     n_chi_: u32,
     n_centroids_: u32,
@@ -25,12 +26,32 @@ pub struct MakeRotlibOptions {
     bb_ranges_: Vec<i32>,
 }
 
+#[derive(Debug)]
+// Describe range of torsion angle values
+pub enum TorsionRange {
+    Low(i32),
+    High(i32),
+    Step(i32),
+}
+
+pub enum CentroidRotNum {
+    Angle(i32),
+    RotNum(usize),
+}
+
+pub enum MakeRotLibPolymerType {
+   PEPTIDE,
+   PEPTOID,
+}
+
+////-------- FUNCTIONS BELOW ---------////
+
 /// @brief: Take in a passed `@{filepath}` and convert the contents into
 /// MakeRotLib parameters
 /// @author: Andrew Powers
-pub fn read_in_data( filepath: &str ) -> MakeRotlibOptions {
+pub fn read_in_data( filepath: &str ) -> MakeRotLibOptions {
 
-    let mut mklo = MakeRotlibOptions {
+    let mut mklo = MakeRotLibOptions {
         n_bb_ : 0,
         n_chi_ : 0,
         n_centroids_ : 0,

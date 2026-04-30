@@ -2,8 +2,8 @@
 /// Doug Renfrew and Andy Watkins originally
 /// @author: Andrew Powers ( apowers4@uoregon.edu )
 
-pub mod make_rotlib_options;
+pub mod makerotlib_options;
 
 fn main() {
-    let out: make_rotlib_options::MakeRotlibOptions = make_rotlib_options::read_in_data("inputs/C40_rot_lib_options_test.in");
+    let _out: makerotlib_options::MakeRotLibOptions = makerotlib_options::read_in_data("inputs/C40_rot_lib_options_test.in");
 }
