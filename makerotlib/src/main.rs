@@ -5,5 +5,10 @@
 pub mod makerotlib_options;
 
 fn main() {
-    let _out: makerotlib_options::MakeRotLibOptionsData = makerotlib_options::read_in_data("inputs/C40_rot_lib_options_test.in");
+    let mut out: makerotlib_options::MakeRotLibOptionsData = makerotlib_options::read_in_data("inputs/C40_rot_lib_options_test.in");
+    makerotlib_options::second_file_parse("inputs/C40_rot_lib_options_test.in", &mut out);
+
+    println!("---Inside of main---");
+    println!("{:?}", out);
 }
+
