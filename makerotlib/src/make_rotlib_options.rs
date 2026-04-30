@@ -20,6 +20,9 @@ pub struct MakeRotlibOptions {
     semirotameric_: bool,
     kbt_: f64,
     name_: String,
+    chi_ranges_: Vec<i32>,
+    bb_ids_: Vec<i32>,
+    bb_ranges_: Vec<i32>,
 }
 
 /// @brief: Take in a passed `@{filepath}` and convert the contents into
@@ -34,6 +37,9 @@ pub fn read_in_data( filepath: &str ) -> MakeRotlibOptions {
         semirotameric_ : false,
         kbt_ : 0.0,
         name_ : "UNK".to_string(),
+        chi_ranges_: Vec::new(),
+        bb_ids_: Vec::new(),
+        bb_ranges_: Vec::new(),
     };
 
     // Read in a passed file and error if it is not available
@@ -82,6 +88,11 @@ pub fn read_in_data( filepath: &str ) -> MakeRotlibOptions {
             }
         }
     }
+
+    // Update the sizes of our vectors, so that we can fill it with information
+    mklo.chi_ranges_.resize(usize::try_from(mklo.n_chi_).unwrap(), 0);
+    mklo.bb_ids_.resize(usize::try_from(mklo.n_bb_).unwrap(), 0);
+    mklo.bb_ranges_.resize(usize::try_from(mklo.n_bb_).unwrap(), 0);
 
     println!("{:?}", mklo);
     return mklo
