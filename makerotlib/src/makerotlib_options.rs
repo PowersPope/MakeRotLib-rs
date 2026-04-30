@@ -14,29 +14,38 @@ use std::io::prelude::*;
 /// MakeRotLib, though this struct
 /// needs to be loaded up with parameters
 /// from a passed in file first
-pub struct MakeRotLibOptions {
+pub struct MakeRotLibOptionsData {
     n_bb_: u32,
     n_chi_: u32,
     n_centroids_: u32,
     semirotameric_: bool,
     kbt_: f64,
     name_: String,
-    chi_ranges_: Vec<i32>,
+    chi_ranges_: Vec<TorsionRange>,
     bb_ids_: Vec<i32>,
-    bb_ranges_: Vec<i32>,
+    bb_ranges_: Vec<TorsionRange>,
+    omg_range_: TorsionRange,
+    eps_range_: TorsionRange,
+}
+
+#[derive(Clone, Debug)]
+// Describe range of torsion angle values
+pub struct TorsionRange {
+    low: i32,
+    high: i32,
+    step: i32,
+}
+
+impl TorsionRange {
+    fn new(low: i32, high: i32, step: i32) -> Self {
+        Self { low, high, step }
+    }
 }
 
 #[derive(Debug)]
-// Describe range of torsion angle values
-pub enum TorsionRange {
-    Low(i32),
-    High(i32),
-    Step(i32),
-}
-
-pub enum CentroidRotNum {
-    Angle(i32),
-    RotNum(usize),
+pub struct CentroidRotNum {
+    angle: i32,
+    rot_num: usize,
 }
 
 pub enum MakeRotLibPolymerType {
@@ -49,18 +58,20 @@ pub enum MakeRotLibPolymerType {
 /// @brief: Take in a passed `@{filepath}` and convert the contents into
 /// MakeRotLib parameters
 /// @author: Andrew Powers
-pub fn read_in_data( filepath: &str ) -> MakeRotLibOptions {
+pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
 
-    let mut mklo = MakeRotLibOptions {
+    let mut mklo = MakeRotLibOptionsData {
         n_bb_ : 0,
         n_chi_ : 0,
         n_centroids_ : 0,
         semirotameric_ : false,
         kbt_ : 0.0,
         name_ : "UNK".to_string(),
-        chi_ranges_: Vec::new(),
+        chi_ranges_: vec![TorsionRange::new(0,0,0)],
         bb_ids_: Vec::new(),
-        bb_ranges_: Vec::new(),
+        bb_ranges_: vec![TorsionRange::new(0,0,0)],
+        omg_range_: TorsionRange::new(0,0,0),
+        eps_range_: TorsionRange::new(0,0,0),
     };
 
     // Read in a passed file and error if it is not available
@@ -110,10 +121,11 @@ pub fn read_in_data( filepath: &str ) -> MakeRotLibOptions {
         }
     }
 
+
     // Update the sizes of our vectors, so that we can fill it with information
-    mklo.chi_ranges_.resize(usize::try_from(mklo.n_chi_).unwrap(), 0);
     mklo.bb_ids_.resize(usize::try_from(mklo.n_bb_).unwrap(), 0);
-    mklo.bb_ranges_.resize(usize::try_from(mklo.n_bb_).unwrap(), 0);
+    mklo.chi_ranges_.resize(usize::try_from(mklo.n_chi_).unwrap(), TorsionRange::new(0,0,0));
+    mklo.bb_ranges_.resize(usize::try_from(mklo.n_bb_).unwrap(), TorsionRange::new(0,0,0));
 
     println!("{:?}", mklo);
     return mklo
