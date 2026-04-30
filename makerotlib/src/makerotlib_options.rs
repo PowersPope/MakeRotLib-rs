@@ -26,9 +26,11 @@ pub struct MakeRotLibOptionsData {
     bb_ranges_: Vec<TorsionRange>,
     omg_range_: TorsionRange,
     eps_range_: TorsionRange,
+    centroid_data_: Vec<Vec<CentroidRotNum>>,
+    polymer_type_: MakeRotLibPolymerType,
 }
 
-#[derive(Clone, Debug)]
+#[derive(Clone,Debug)]
 // Describe range of torsion angle values
 pub struct TorsionRange {
     low: i32,
@@ -42,15 +44,24 @@ impl TorsionRange {
     }
 }
 
-#[derive(Debug)]
+#[derive(Clone,Debug)]
 pub struct CentroidRotNum {
     angle: i32,
     rot_num: usize,
 }
 
+impl CentroidRotNum {
+    fn new(angle: i32, rot_num: usize) -> Self {
+        Self { angle, rot_num }
+    }
+}
+
+
+#[derive(Debug)]
 pub enum MakeRotLibPolymerType {
-   PEPTIDE,
-   PEPTOID,
+    UNKNOWN,
+    PEPTIDE,
+    PEPTOID,
 }
 
 ////-------- FUNCTIONS BELOW ---------////
@@ -72,6 +83,8 @@ pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
         bb_ranges_: vec![TorsionRange::new(0,0,0)],
         omg_range_: TorsionRange::new(0,0,0),
         eps_range_: TorsionRange::new(0,0,0),
+        centroid_data_: vec![vec![CentroidRotNum::new(0,0)]],
+        polymer_type_: MakeRotLibPolymerType::UNKNOWN,
     };
 
     // Read in a passed file and error if it is not available
