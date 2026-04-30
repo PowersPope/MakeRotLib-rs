@@ -140,6 +140,15 @@ pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
     mklo.chi_ranges_.resize(usize::try_from(mklo.n_chi_).unwrap(), TorsionRange::new(0,0,0));
     mklo.bb_ranges_.resize(usize::try_from(mklo.n_bb_).unwrap(), TorsionRange::new(0,0,0));
 
+    let nrotchi: usize = if mklo.semirotameric_ {
+        usize::try_from(mklo.n_chi_).expect("n_chi_ is not u32") - 1
+    } else {
+        usize::try_from(mklo.n_chi_).expect("n_chi_ is not u32")
+    };
+    let mut rotwells_for_chi: Vec<Vec<i32>> = vec![vec![0]];
+    rotwells_for_chi.resize(nrotchi, vec![0]);
+    let mut rotwells_sepcified = false;
+
     println!("{:?}", mklo);
     return mklo
 }
