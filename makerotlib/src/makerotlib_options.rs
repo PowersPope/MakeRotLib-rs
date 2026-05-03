@@ -69,7 +69,7 @@ pub enum MakeRotLibPolymerType {
 /// @brief: Take in a passed `@{filepath}` and convert the contents into
 /// MakeRotLib parameters
 /// @author: Andrew Powers
-pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
+pub fn read_in_data( filepath: &str ) -> (MakeRotLibOptionsData, Vec<Vec<i32>>) {
 
     let mut mklo = MakeRotLibOptionsData {
         n_bb_ : 0,
@@ -150,12 +150,14 @@ pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
     let mut rotwells_sepcified = false;
 
     println!("{:?}", mklo);
-    return mklo
+    return (mklo, rotwells_for_chi)
 }
 
 /// Now that our `@{mklo}` dataset has been setup and sizes specified, we can now
 /// loop back through `@{filepath}` to grab out the information that we skipped
-pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData ) {
+/// additionally `@{rotwells_nchi}` are passed and rotwell information is stored here, so that it
+/// can be converted over later on.
+pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData, rotwells_nchi: &mut Vec<Vec<i32>> ) {
     let mut bb_i: usize = 0;
 
     // Read in a passed file and error if it is not available
@@ -264,6 +266,46 @@ pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData ) {
                     .expect("CHI RANGE STEP")
                     .parse::<i32>()
                     .expect("Can't unpack CHI RANGE STEP to i32");
+            } else if tag == "CENTROID" {
+                let mut temp_crnv: Vec<CentroidRotNum> = vec![CentroidRotNum::new(0, 0)];
+                if mklo.semirotameric_ {
+                   temp_crnv.resize( 
+                       usize::try_from(mklo.n_chi_).expect("n_chi_ is not u32") - 1, 
+                       CentroidRotNum::new(0, 0),
+                       );
+                   for i in 0..usize::try_from(mklo.n_chi_).unwrap()-1 {
+                    temp_crnv[i].angle = line_iter.next().expect("No Centroid ANGLE")
+                        .parse::<i32>().expect("Cant unpack Centroid Angle to i32");
+                    temp_crnv[i].rot_num = line_iter.next()
+                        .expect("No Centroid rot_num")
+                        .parse::<usize>().expect("Cant unpack Centroid rot_num to usize");
+                   }
+                } else {
+                   temp_crnv.resize( 
+                       usize::try_from(mklo.n_chi_).expect("n_chi_ is not u32"), 
+                       CentroidRotNum::new(0, 0),
+                       );
+                   for i in 0..usize::try_from(mklo.n_chi_).unwrap() {
+                       temp_crnv[i].angle = line_iter.next().expect("No Centroid ANGLE")
+                           .parse::<i32>().expect("Cant unpack Centroid Angle to i32");
+                       temp_crnv[i].rot_num = line_iter.next()
+                           .expect("No Centroid rot_num")
+                           .parse::<usize>().expect("Cant unpack Centroid rot_num to usize");
+                   }
+                }
+                mklo.centroid_data_.push(temp_crnv);
+            } else if tag == "ROTWELLS" {
+                let rotwells_specified: bool = true;
+                let chi_num: usize = line_iter.next().expect("No chi_num")
+                    .parse::<usize>().expect("Cant convert chi_num to uszie");
+                let n_rotwells: usize = line_iter.next().expect("No rotwells")
+                    .parse::<usize>().expect("Cant convert rotwells to usize");
+                for _ in 0..n_rotwells {
+                    let rotwell_angle: i32 = line_iter.next()
+                        .expect("rotwell isnt correct")
+                        .parse::<i32>().expect("Cant convert rotwell to i32");
+                    rotwells_nchi[chi_num].push(rotwell_angle);
+                }
             }
         }
     }
