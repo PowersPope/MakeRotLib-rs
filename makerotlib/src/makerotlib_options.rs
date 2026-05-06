@@ -66,10 +66,22 @@ pub enum MakeRotLibPolymerType {
 
 ////-------- FUNCTIONS BELOW ---------////
 
+/// @brief determine the number of rotamer chi angles based on
+/// if the amino acid is `@{semirot}` the number of chi rotamers are
+/// based on `@{n_chi}`.
+pub fn determine_nrotchi( semirot: bool, n_chi: &u32 ) -> usize {
+    let nrotchi: usize = if semirot {
+        usize::try_from(*n_chi).expect("n_chi_ is not u32") - 1
+    } else {
+        usize::try_from(*n_chi).expect("n_chi_ is not u32")
+    };
+    nrotchi
+}
+
 /// @brief: Take in a passed `@{filepath}` and convert the contents into
 /// MakeRotLib parameters
 /// @author: Andrew Powers
-pub fn read_in_data( filepath: &str ) -> (MakeRotLibOptionsData, Vec<Vec<i32>>) {
+pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
 
     let mut mklo = MakeRotLibOptionsData {
         n_bb_ : 0,
@@ -140,25 +152,19 @@ pub fn read_in_data( filepath: &str ) -> (MakeRotLibOptionsData, Vec<Vec<i32>>) 
     mklo.chi_ranges_.resize(usize::try_from(mklo.n_chi_).unwrap(), TorsionRange::new(0,0,0));
     mklo.bb_ranges_.resize(usize::try_from(mklo.n_bb_).unwrap(), TorsionRange::new(0,0,0));
 
-    let nrotchi: usize = if mklo.semirotameric_ {
-        usize::try_from(mklo.n_chi_).expect("n_chi_ is not u32") - 1
-    } else {
-        usize::try_from(mklo.n_chi_).expect("n_chi_ is not u32")
-    };
-    let mut rotwells_for_chi: Vec<Vec<i32>> = vec![vec![0]];
-    rotwells_for_chi.resize(nrotchi, vec![0]);
-    let mut rotwells_sepcified = false;
-
     println!("{:?}", mklo);
-    return (mklo, rotwells_for_chi)
+    return mklo
 }
 
-/// Now that our `@{mklo}` dataset has been setup and sizes specified, we can now
-/// loop back through `@{filepath}` to grab out the information that we skipped
-/// additionally `@{rotwells_nchi}` are passed and rotwell information is stored here, so that it
-/// can be converted over later on.
-pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData, rotwells_nchi: &mut Vec<Vec<i32>> ) {
+/// @brief: Now that our `@{mklo}` dataset has been setup and sizes specified, we can now
+/// loop back through `@{filepath}` to grab out the information that we skipped.
+/// @author: Andrew Powers
+pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData ) {
     let mut bb_i: usize = 0;
+    let nrotchi: usize = determine_nrotchi( mklo.semirotameric_, &mklo.n_chi_);
+    let mut rotwells_for_chi: Vec<Vec<i32>> = vec![vec![0]];
+//     rotwells_for_chi.resize(nrotchi, vec![0]);
+    let mut rotwells_specified: bool = false;
 
     // Read in a passed file and error if it is not available
     let file_result =  OpenOptions::new().read(true).open(filepath);
@@ -295,7 +301,8 @@ pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData, rotw
                 }
                 mklo.centroid_data_.push(temp_crnv);
             } else if tag == "ROTWELLS" {
-                let rotwells_specified: bool = true;
+                rotwells_specified = true;
+                rotwells_for_chi.resize(nrotchi, vec![0]);
                 let chi_num: usize = line_iter.next().expect("No chi_num")
                     .parse::<usize>().expect("Cant convert chi_num to uszie");
                 let n_rotwells: usize = line_iter.next().expect("No rotwells")
@@ -304,10 +311,20 @@ pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData, rotw
                     let rotwell_angle: i32 = line_iter.next()
                         .expect("rotwell isnt correct")
                         .parse::<i32>().expect("Cant convert rotwell to i32");
-                    rotwells_nchi[chi_num].push(rotwell_angle);
+                    rotwells_for_chi[chi_num].push(rotwell_angle);
                 }
             }
         }
+    }
+
+    // Now make sure we selected either centroid or rotamer wells, not both
+    assert_ne!( mklo.centroid_data_.len() > 0, rotwells_for_chi.len() > 1,
+        "Warning: you specified both centroids and rotamer well combinations. We can't do both.");
+    let nrotchi: usize = determine_nrotchi( mklo.semirotameric_, &mklo.n_chi_);
+
+    // Continue on from  if (rotwells-specified) {}
+    if rotwells_specified {
+        let mut indices: Vec<i32> = Vec::with_capacity(nrotchi);
     }
     println!("{:?}", mklo);
 }
