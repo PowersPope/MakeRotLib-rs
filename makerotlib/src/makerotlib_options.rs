@@ -322,9 +322,36 @@ pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData ) {
         "Warning: you specified both centroids and rotamer well combinations. We can't do both.");
     let nrotchi: usize = determine_nrotchi( mklo.semirotameric_, &mklo.n_chi_);
 
-    // Continue on from  if (rotwells-specified) {}
+    // Generate all combinations of rotamer wells.
+    // indices is a vector over all chi that says which rotwell we are workign with
+    // for each chi
     if rotwells_specified {
-        let mut indices: Vec<i32> = Vec::with_capacity(nrotchi);
+        let mut indices: Vec<usize> = Vec::with_capacity(nrotchi);
+        indices.resize(nrotchi, 0);
+        rotwells_for_chi.push( vec![1,0] );
+
+        let mut p: usize = 0;
+        while indices[nrotchi] == 0 {
+            let mut temp_crnv: Vec<CentroidRotNum> = vec![CentroidRotNum::new(0, 0)];
+            temp_crnv.resize(nrotchi, CentroidRotNum::new(0,0));
+            for i in 0..nrotchi {
+                temp_crnv[i].angle = rotwells_for_chi[i][indices[i]];
+                temp_crnv[i].rot_num = indices[i];
+            }
+            mklo.centroid_data_.push(temp_crnv);
+            indices[0] += 1;
+            while indices[p] > rotwells_for_chi[p].len() {
+                if p < nrotchi {indices[p] = 1;}
+                else { indices[p] = 0;}
+                p = p + 1;
+                indices[p] += 1;
+                if indices[p] < rotwells_for_chi[p].len() {p=1;}
+            }
+        }
     }
-    println!("{:?}", mklo);
+
+    // Currently leaving out the Chemical get residue name_map type
+    // As I have not implemented the ChemicalManager into Rust or ResidueType
+    // for now we will HARDCODE a polyer_type_ of PEPTIDE.
+    mklo.polymer_type_ = MakeRotLibPolymerType::PEPTIDE;
 }
