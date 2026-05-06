@@ -6,6 +6,7 @@
 use std::fs::OpenOptions;
 use std::io::BufReader;
 use std::io::prelude::*;
+use tracing::{Level, event, instrument};
 
 //// STRUCTS AND ENUM SETUP 
 
@@ -78,6 +79,7 @@ pub fn determine_nrotchi( semirot: bool, n_chi: &u32 ) -> usize {
     nrotchi
 }
 
+#[instrument]
 /// @brief: Take in a passed `@{filepath}` and convert the contents into
 /// MakeRotLib parameters
 /// @author: Andrew Powers
@@ -145,6 +147,7 @@ pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
             }
         }
     }
+    event!(Level::INFO, "First pass of the file to fill data is done.");
 
 
     // Update the sizes of our vectors, so that we can fill it with information
@@ -152,14 +155,16 @@ pub fn read_in_data( filepath: &str ) -> MakeRotLibOptionsData {
     mklo.chi_ranges_.resize(usize::try_from(mklo.n_chi_).unwrap(), TorsionRange::new(0,0,0));
     mklo.bb_ranges_.resize(usize::try_from(mklo.n_bb_).unwrap(), TorsionRange::new(0,0,0));
 
-    println!("{:?}", mklo);
+    event!(Level::INFO, "MakeRotLibOptionsData bb_ids_, chi_ranges_, and bb_ranges_ are resized and filled with default values.");
     return mklo
 }
 
+#[instrument]
 /// @brief: Now that our `@{mklo}` dataset has been setup and sizes specified, we can now
 /// loop back through `@{filepath}` to grab out the information that we skipped.
 /// @author: Andrew Powers
 pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData ) {
+    event!(Level::INFO, "Starting our second pass through input file.");
     let mut bb_i: usize = 0;
     let nrotchi: usize = determine_nrotchi( mklo.semirotameric_, &mklo.n_chi_);
     let mut rotwells_for_chi: Vec<Vec<i32>> = vec![vec![0]];
@@ -318,6 +323,8 @@ pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData ) {
     }
 
     // Now make sure we selected either centroid or rotamer wells, not both
+    event!(Level::DEBUG, "centroid_data_ length is {}", mklo.centroid_data_.len());
+    event!(Level::DEBUG, "rotwells_for_chi length is {}", rotwells_for_chi.len());
     assert_ne!( mklo.centroid_data_.len() > 0, rotwells_for_chi.len() > 1,
         "Warning: you specified both centroids and rotamer well combinations. We can't do both.");
     let nrotchi: usize = determine_nrotchi( mklo.semirotameric_, &mklo.n_chi_);
@@ -326,6 +333,8 @@ pub fn second_file_parse( filepath: &str, mklo: &mut MakeRotLibOptionsData ) {
     // indices is a vector over all chi that says which rotwell we are workign with
     // for each chi
     if rotwells_specified {
+        event!(Level::DEBUG, "rotwells_specified={}, this means all rotwell combinations are computed here.", rotwells_specified);
+
         let mut indices: Vec<usize> = Vec::with_capacity(nrotchi);
         indices.resize(nrotchi, 0);
         rotwells_for_chi.push( vec![1,0] );
